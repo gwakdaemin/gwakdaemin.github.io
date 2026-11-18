@@ -34,6 +34,14 @@ button:focus-visible,select:focus-visible{outline:2px solid var(--green);outline
 .add:disabled{opacity:.35;cursor:not-allowed}
 .res{border-top:1px solid var(--line);margin-top:22px;padding-top:12px}
 .item{display:flex;align-items:center;gap:8px;font-size:13px;padding:8px 0;border-bottom:1px solid var(--line)}
+.item{border-left:4px solid var(--c);padding-left:10px}
+.item .nm{flex:1;color:var(--c);font-weight:700}
+.t-T{--c:#f87171}.t-L{--c:#60a5fa}.t-C{--c:#facc15}.t-R{--c:#c084fc}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]) .t-T{--c:#dc2626}:root:not([data-theme="dark"]) .t-L{--c:#2563eb}:root:not([data-theme="dark"]) .t-C{--c:#a16207}:root:not([data-theme="dark"]) .t-R{--c:#7e22ce}}
+.seg button.on.t-T{background:#f87171;border-color:#f87171;color:#111}
+.seg button.on.t-L{background:#60a5fa;border-color:#60a5fa;color:#111}
+.seg button.on.t-C{background:#facc15;border-color:#facc15;color:#111}
+.seg button.on.t-R{background:#c084fc;border-color:#c084fc;color:#111}
 .item .nm{flex:1}
 .item b{font-weight:700;min-width:34px;text-align:right}
 .ib{background:none;border:1px solid var(--line);color:var(--text);border-radius:99px;width:28px;height:28px;font-size:15px;line-height:1;cursor:pointer;padding:0}
@@ -92,7 +100,7 @@ function renderForm(){
   var names=form.t==='R'?['큰 쪽','작은 쪽']:NEED[form.t]===1?['규격']:['첫 번째','두 번째','세 번째'];
   document.getElementById('form').innerHTML=
     '<div class="seg">'+['T','L','C','R'].map(function(t){
-      return '<button class="'+(form.t===t?'on':'')+'" data-type="'+t+'">'+LABEL[t]+'</button>';
+      return '<button class="t-'+t+(form.t===t?' on':'')+'" data-type="'+t+'">'+LABEL[t]+'</button>';
     }).join('')+'</div>'+
     '<div class="row" style="grid-template-columns:repeat('+cols.length+',1fr)">'+
     cols.map(function(k,j){
@@ -101,11 +109,22 @@ function renderForm(){
     '<div class="spec">'+spec(form)+'</div>'+
     '<button class="add" data-add="1"'+(spec(form)?'':' disabled')+'>＋ 추가</button>';
 }
+var ORDER=['T','L','C','R'];
+function sortList(){
+  list.sort(function(x,y){
+    if(x.t!==y.t)return ORDER.indexOf(x.t)-ORDER.indexOf(y.t);
+    for(var i=0;i<3;i++){
+      var p=x.v[i]||0,q=y.v[i]||0;
+      if(p!==q)return q-p;
+    }
+    return 0;
+  });
+}
 function total(){return list.reduce(function(n,x){return n+x.n},0)}
 function renderList(){
   document.getElementById('total').textContent=total()+'개';
   document.getElementById('items').innerHTML=list.length?list.map(function(x,i){
-    return '<div class="item"><span class="nm">'+x.s+'</span>'+
+    return '<div class="item t-'+x.t+'"><span class="nm">'+x.s+'</span>'+
       '<button class="ib" data-dec="'+i+'" aria-label="하나 빼기">−</button>'+
       '<b>'+x.n+'개</b>'+
       '<button class="ib" data-inc="'+i+'" aria-label="하나 더하기">+</button>'+
@@ -124,7 +143,7 @@ document.getElementById('form').addEventListener('click',function(e){
   if(e.target.closest('[data-add]')){
     var s=spec(form);if(!s)return;
     var found=list.filter(function(x){return x.s===s})[0];
-    if(found)found.n++;else list.push({s:s,n:1});
+    if(found)found.n++;else{list.push({s:s,n:1,t:form.t,v:[form.a,form.b,form.c].slice(0,NEED[form.t]).map(function(z){return VAL[z]})});sortList()}
     form.a='';form.b='';form.c='';
     renderForm();renderList();
   }
